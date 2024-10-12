@@ -76,6 +76,8 @@ INSTRUCTION_ORDERS = {
     "op_a2_a1": "opcode arg2 arg1"
 }
 
+INSTRUCTION_ORDER = INSTRUCTION_ORDERS["op_a2_a1"]      # Define the instruction order to use for the current challenge
+
 def assemble_instruction(instruction, order=INSTRUCTION_ORDER):
     """
     Assembles a single Yan85 instruction into bytecode.
@@ -140,28 +142,69 @@ def assemble_instruction(instruction, order=INSTRUCTION_ORDER):
     return instruction_bytecode
 
 
-def assemble_yancode(yancode):
+def assemble_instruction(instruction, order=INSTRUCTION_ORDER):
     """
-    Assembles a series of Yan85 instructions into bytecode.
-    :param yancode: The full Yan85 code containing all instructions.
-    :return: Bytecode representation of the yancode.
+    Assembles a single Yan85 instruction into bytecode.
+    :param instruction: The original instruction string (e.g., 'IMM A 5').
+    :param order: The current instruction order.
+    :return: 3-byte bytecode for the instruction.
+    """
+    parts = instruction.strip().split()
+
+    if len(parts) != 3:
+        raise ValueError(f"Invalid instruction format: {instruction}")
+
+    # Step 1: Create a map from the provided order
+    order_components = order.split()
     
-    Steps:
-    1. Splits the yancode into lines and removes comments.
-    2. Assembles each instruction using the assemble_instruction function.
-    3. Combines the bytecode for each instruction into a complete bytecode output.
+    # Prepare a list to store the reordered instruction parts in bytecode order
+    bytecode_parts = []
+
+    # Step 2: Convert each part to its bytecode representation based on the order
+    for component_type in order_components:
+        component_str = parts[order_components.index(component_type)]
+
+        if component_type == "opcode":
+            opcode_byte = opcodes_map.get(component_str)
+            if opcode_byte is None:
+                raise ValueError(f"Unknown opcode: {component_str}")
+            bytecode_parts.append(opcode_byte)
+        elif component_type == "arg1" or component_type == "arg2":
+            bytecode_parts.append(convert_to_bytecode(component_str, component_type))
+
+    # Ensure that all bytecode parts are present
+    if len(bytecode_parts) != 3:
+        raise ValueError("Assembled instruction does not have exactly 3 bytecode parts.")
+
+    # Ensure all bytes are within the 0-255 range
+    for byte in bytecode_parts:
+        if not (0 <= byte <= 255):
+            raise ValueError(f"Byte out of range: {byte}")
+
+    # Step 3: Construct the final 3-byte instruction
+    instruction_bytecode = bytes(bytecode_parts)
+    
+    return instruction_bytecode
+
+
+def convert_to_bytecode(component, component_type):
     """
-    assembled_code = b''
+    Helper function to convert an instruction component to its bytecode.
+    :param component: The instruction component (e.g., 'A', '0x10', 'OPEN').
+    :param component_type: The type of the component (e.g., 'arg1', 'arg2').
+    :return: Bytecode for the component.
+    """
+    if component in register_map:
+        return register_map[component]
+    elif component in syscalls:
+        value = syscalls[component]
+        return value & 0xFF
+    else:
+        try:
+            return int(component, 0)  # Convert immediate values
+        except ValueError:
+            raise ValueError(f"Invalid {component_type} value: {component}")
 
-    for line in yancode.splitlines():
-        line = line.split("#")[0].strip()  # Remove comments
-        if not line:
-            continue
-
-        instruction_bytecode = assemble_instruction(line)   # Convert each line into bytecode
-        assembled_code += instruction_bytecode              # Append the converted instruction
-
-    return assembled_code
 
 def reorder_instruction(instruction, order=INSTRUCTION_ORDER):
     """
@@ -227,8 +270,6 @@ IMM B 0x2F
 STM A B
 etc...
 '''
-
-INSTRUCTION_ORDER = INSTRUCTION_ORDERS["op_a2_a1"]      # Define the instruction order to use for the current challenge
 
 adjusted_yancode = adjust_yancode_order(yancode)        # Adjust the ordering of the yancode, if need be
 print(f"Adjusted Yancode: {adjusted_yancode}")          # Print the adjusted yancode for verification
