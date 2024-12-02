@@ -58,12 +58,12 @@ register_map = {
 
 # ****** SYSCALLS ******
 syscalls = {
-    "OPEN": 0x10,           # SYS OPEN <REG> - calls open(filename, flags, mode). Returns fd into provided register
-    "READ_CODE": 0x8,       # SYS READ_CODE <REG> - calls read(fd, buffer, num bytes). Reads from memory location 0 to 764. Returns num bytes read into provided register
-    "READ_MEMORY": 0x20,    # SYS READ_MEMORY <REG> - calls read(fd, buffer, num bytes). Reads from memory location 765 to 1023. Returns num bytes read into provided register
-    "WRITE": 0x2,           # SYS WRITE <REG> - calls write(fd, buffer_offset, num_bytes). Returns num bytes written into provided register
-    "SLEEP": 0x1,           # SYS SLEEP <REG> - calls the sleep function. Returns time slept into provided register
-    "EXIT": 0x4,            # SYS EXIT <REG> - calls exit
+           "OPEN" : 0x8,    # SYS OPEN <REG> - calls open(filename, flags, mode). Returns fd into provided register
+      "READ_CODE" : 0x4,    # SYS READ_CODE <REG> - calls read(fd, buffer, num bytes). Reads from memory location 0 to 764. Returns num bytes read into provided register
+    "READ_MEMORY" : 0x10,   # SYS READ_MEMORY <REG> - calls read(fd, buffer, num bytes). Reads from memory location 765 to 1023. Returns num bytes read into provided register
+          "WRITE" : 0x2,    # SYS WRITE <REG> - calls write(fd, buffer_offset, num_bytes). Returns num bytes written into provided register
+          "SLEEP" : 0x20,   # SYS SLEEP <REG> - calls the sleep function. Returns time slept into provided register
+           "EXIT" : 0x1,    # SYS EXIT <REG> - calls exit
 }
 
 # Dictionary to hold the different combinations of instruction orders
